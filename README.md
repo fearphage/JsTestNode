@@ -1,20 +1,25 @@
-# JsTestDriver-Node
+# JsTestNode
 
-A JsTestDriver using Node.js instead Java.
+_Note: This is still under heavy development. Big changes may occur. Any help or
+suggestions would be greatly appreciated. Please fork, improve and request a pull._
 
-Can be extended with any testing framework you want, as long as it can be put
-in one js file. The default (and only one included) is Jasmine.
+A [JsTestDriver](http://code.google.com/p/js-test-driver/) using Node.js
+instead of Java.
 
-One advantage this has over the Java version (because you still need to install
-a "VM" in the form of Node to start _a server instance_) is that your development
-machines can execute the tests towards the server without needing Node. There
-is a bash script available that sends off your tests and displays the results
-without ever needing Node. How practical is THAT! :)
+The included test framework is Jasmine. More frameworks may be supported in the
+future, but they would likely require a slight modification done to them.
+
+Your development machine can execute the tests towards the server without
+needing Node on that machine. There is a bash script available that sends off
+your tests and displays the results without ever needing Node. You can
+still choose to run your tests through Node (just like JsTestDriver lets you
+run the tests through the same file that starts the server), the bash script is
+optional.
 
 If you are on Windows, you will need Cygwin to run Node.js to start a server
 instance. And for the moment there are no Windows scripts or executables for
 the "development machine only" scenario, but that will hopefully change soon.
-You can still use the bash script inside Cygwin.
+You can still use the bash script inside Cygwin, as long as cURL is available.
 
 ## Set up a server
 
@@ -22,13 +27,13 @@ If a server already exists, you can skip these steps.
 
 ### 1. Install Node
 
-http://nodejs.org
+[http://nodejs.org](http://nodejs.org)
 
 ### 2. Install NPM (Node Package Manager)
 
 Every Node.js user should have it.
 
-http://npmjs.org
+[http://npmjs.org](http://npmjs.org)
 
 ### 3. Install all the dependencies
 
@@ -36,25 +41,40 @@ Type into your console
 
     npm install socket.io
     npm install iniparser
+	npm install uuid
 
-### 4. Install JsTestDriver-Node
+### 4. Install JsTestNode
 
-Download and unpack to location of choice.
+[Download](http://github.com/torvalamo/JsTestNode/downloads) and unpack to location of choice.
 
 ### 5. Start the server
 
 Create a new file `start.sh` containing:
 
     #!/usr/bin/bash
-    node /path/to/jstestdriver.js $1
+    node /path/to/jstestnode.js $1
 
 To start a server on port 7357 (see how it reads TEST? ;-), type into your console
 
     ./start.sh 7357
 
 You now have a server up and running. Next time you want to start the server
-you can just use that same short command. 7357 is the default port, so you
-don't even need to specify it if you want to use that port.
+you can just use that same command. 7357 is the default port, so you
+don't even need to specify that if you want to use that port.
+
+### 6. Add users (not yet implemented)
+
+If the server is public, you would probably want to prevent any random person
+from accessing it. The username and password applied both to running tests and
+capturing browsers.
+You can add users like so:
+
+    node /path/to/jstestnode.js --add username password
+
+    node /path/to/jstestnode.js --add username --email name@email.com
+
+This command creates a new user and sends an email to that user containing his
+password, using the given smtp server.
 
 ## Capture browsers
 
@@ -69,21 +89,24 @@ Direct your browser to your test server's domain and port.
 
 There should be a button that says "Capture" on the page that just loaded.
 
-After the test page loads, you can minimize the browser, because you don't need to do anything else there.
+After the test page loads, you can minimize the browser, because you don't need
+to do anything else there.
 
 ### 3. Repeat for all browsers you want to run tests on
 
-If you want to automate starting all these browsers, you can change your `start.sh` to look something like this
+If you want to automate starting all these browsers, you can change your
+`start.sh` to look something like this
 
     #!/usr/bin/bash
-    node /path/to/jstestdriver.js $1 /path/to/browser /some/other/browser
+    node /path/to/jstestnode.js $1 /path/to/browser /some/other/browser
 
 ## Setup and run tests
 
-So you've set up a server, you've captured some browsers, and now you're ready to run your test suite on them.
+So you've set up a server, you've captured some browsers, and now you're ready
+to run your test suite on them.
 
-If you have Node installed on your computer (and you've installed the `jstestdriver` package) you can use that,
-or you can use the bash script (see step 3).
+If you have Node installed on your computer (and you've downloaded JsTestNode)
+you can use that, or you can use the bash script (see below).
 
 ### Create a configuration file
 
@@ -98,13 +121,16 @@ The ini file can look like this:
     [server]
     host=localhost
     port=7357					; optional, default is 7357
-    uses=jasmine-1.0.1			; optional, default is latest jasmine
+	user=anonymous				; optional, default is anonymous
+	pass=						; optional, default is blank
+    use=jasmine					; optional, default is jasmine
     
     [files]						; specify the load order
+	link=http://code.jquery.com/jquery-latest.js	; link to external file
     load=scripts/init.js
     load=scripts/*.js
     load=tests/*.js
-    skip=tests/experiment.js	; you can skip files otherwise caught by the asterisk
+    skip=scripts/experiment.js	; you can skip files otherwise caught by the asterisk
 
 ### I have Node
 
@@ -136,11 +162,13 @@ Note that the bash script talked about below is not the same script.
 This bash script can be used on computers that don't have Node installed, but
 are used for development (and so naturally you want a way to run your tests).
 
-Create a file called `tests.sh` in your project folder with the following contents:
+Remember you need to [install cURL](http://curl.haxx.se/download.html) if you don't already have it.
 
-    #!/usr/bin/bash
-    
-    more to come here
+The file can be downloaded from _mytestsserver_:_7357_/tests.sh
+
+It takes the same arguments as the node file above, for instance:
+
+    ./tests.sh --config tests/tests.ini
 
 ### I am on Windows!
 

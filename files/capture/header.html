@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+<head>
+	<title></title>
+	<script src="/json2.js"></script>
+	<script src="/json_sans_eval.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		window.onload = function() {
+			var socket = new io.Socket()
+			var browser = {
+				'agent': navigator.userAgent,
+				'os': navigator.platform
+			}
+			socket.on('connect', function() {
+				socket.send(browser)
+			})
+			socket.connect()
+			document.getElementsByTagName('span')[0].innerHTML = JSON.stringify(browser)
+		}
+	</script>
+</head>
+<body>
+	<p>JsTestDriver-Node <span></span></p>
+</body>
+</html>

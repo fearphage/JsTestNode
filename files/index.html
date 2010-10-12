@@ -1,0 +1,117 @@
+<!doctype html>
+<html>
+<head>
+	<title>JsTestNode</title>
+	<script src="/json2.js"></script>
+	<script src="/json_sans_eval.js"></script>
+	<script src="/socket.io/socket.io.js"></script>
+	<script>
+		window.onload = function() {
+			var socket = new io.Socket()
+			var oscolors = [], timer
+			
+			socket.on('connect', function() {
+				socket.send({ 'get': 'overview' })
+			})
+			socket.on('disconnect', function() {
+				clearTimeout(timer)
+			})
+			
+			socket.on('message', function(data) {
+				if (data.os && data.browsers) {
+					// update every minute
+					timer = setTimeout(function() {
+						socket.send({ 'get': 'overview' })
+					}, 60000)
+					
+					if (!data.os.length) {
+						document.getElementById('table').innerHTML = ''
+						return
+					}
+					var make_row = function(arr) {
+						var row = '';
+						var hex = ['8', '9', 'A', 'B', 'C', 'D', 'E','F']
+						for (var i = 0; i < arr.length; i++) {
+							if (oscolors.length <= arr.length) {
+								var color = function() {
+									var c = '#'
+									for (var i = 0; i < 6; i++) {
+										c += hex[Math.round(Math.random() * 7)]
+									}
+									return c
+								}()
+								oscolors.push(color)
+							}
+							row += '<td style="background-color:' + oscolors[i] + '">' + arr[i] + '</td>'
+						}
+						return row
+					}
+					var make_browsers = function(browsers, os) {
+						var rows = ''
+						for (var name in browsers) {
+							var browser = '<tr><td colspan="' + (os.length + 1) +
+										  '" class="al br">' + name + '</td></tr>'
+							for (var version in browsers[name]) {
+								browser += '<tr><td class="al ver">' + version + '</td>'
+								for (var i = 0; i < os.length; i++) {
+									browser += '<td'
+									if (os[i] in browsers[name][version]) {
+										browser += ' style="background-color:' + oscolors[i] + '">' + browsers[name][version][os[i]]
+									} else {
+										browser += '>'
+									}
+									browser += '</td>'
+								}
+								browser += '</tr>'
+							}
+							rows += browser
+						}
+						return rows
+					}
+					var table = '<table><thead><tr><td rowspan="2"></td>' +
+								'<td colspan="' + data.os.length + '">Operating System</td>' +
+								'</tr><tr>' + make_row(data.os) + '</tr></thead>' +
+								'<tbody>' + make_browsers(data.browsers, data.os) +
+								'</tbody></table>'
+					document.getElementById('table').innerHTML = table
+				}
+			})
+			socket.connect()
+		}
+	</script>
+	<style>
+		body > div:first-child {
+			background-color:#88ddaa;
+			padding:10px;
+		}
+		h1 {
+			font-size:20px;
+		}
+		table {
+			width:100%;
+			border-spacing:1px;
+			border-collapse:separate;
+			background-color:#666;
+		}
+		td {
+			background-color:#FFF;
+			text-align:center;
+		}
+		td.al {
+			text-align:left;
+		}
+		td.br {
+			background-color:#EEEEEE;
+		}
+		td.ver {
+			text-indent:10px;
+		}
+	</style>
+</head>
+<body>
+	<h1>JsTestNode</h1>
+	<p><a href="/capture">Capture this browser</a></p>
+	<p>Currently captured browsers:</p>
+	<div id="table"></div>
+</body>
+</html>
